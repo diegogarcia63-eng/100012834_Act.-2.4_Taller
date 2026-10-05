@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
 
-const API_USUARIOS = "http://localhost:3000/api/usuarios";
-const API_PAQUETES = "http://localhost:3000/api/paquetes";
+// ¡AQUÍ ESTÁ TU IP DE AWS CONFIGURADA!
+const API_USUARIOS = "http://107.22.21.214:3000/api/usuarios";
+const API_PAQUETES = "http://107.22.21.214:3000/api/paquetes";
 
 // Tu clave real de Google reCAPTCHA
 const RECAPTCHA_SITE_KEY = "6LduMdEtAAAAALZzLiPPuNay3uW6cPArEP83fhHt";
@@ -41,7 +42,7 @@ export default function App() {
     }];
   });
 
-  // NUEVO: Estado para los pedidos de los clientes
+  // Estado para los pedidos de los clientes
   const [pedidos, setPedidos] = useState(() => {
     const localPedidos = localStorage.getItem("demo_pedidos");
     return localPedidos ? JSON.parse(localPedidos) : [];
@@ -51,7 +52,6 @@ export default function App() {
     try { localStorage.setItem("demo_paquetes", JSON.stringify(paquetes)); } catch (e) {}
   }, [paquetes]);
 
-  // Guardar pedidos en LocalStorage
   useEffect(() => {
     localStorage.setItem("demo_pedidos", JSON.stringify(pedidos));
   }, [pedidos]);
@@ -93,7 +93,6 @@ export default function App() {
     if (usuarioActual?.rol === "superadmin") cargarUsuarios();
   }, [usuarioActual]);
 
-  // --- IMÁGENES GENÉRICAS ---
   const procesarImagenLocal = (e, setEstadoImagen) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -106,7 +105,6 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
-  // --- AUTENTICACIÓN ---
   const iniciarSesion = async (e) => {
     e.preventDefault();
     if (!captchaToken && tabAuth !== "superadmin") {
@@ -176,7 +174,6 @@ export default function App() {
 
   const cerrarSesion = () => { setUsuarioActual(null); localStorage.removeItem("sesion_activa"); setCaptchaToken(null); };
 
-  // --- ACCIONES SUPER ADMIN - USUARIOS Y PAQUETES ---
   const guardarUsuarioSuperAdmin = async (e) => {
     e.preventDefault();
     const payload = { nombre: adminNombre, email: adminEmail, rol: adminRol, estadoCuenta: "aprobado" };
@@ -222,8 +219,6 @@ export default function App() {
     setPaquetes(actualizados); setAdminEditandoPaqId(null); notificar("Cambios guardados", "exito");
   };
 
-  // --- NUEVAS ACCIONES: PEDIDOS ---
-  // Acción del Cliente
   const solicitarPedido = (paquete) => {
     const nuevoPedido = {
       id: Date.now(),
@@ -239,14 +234,12 @@ export default function App() {
     notificar("¡Solicitud enviada! Espera la aprobación del Super Admin.", "exito");
   };
 
-  // Acción del Super Admin
   const cambiarEstadoPedido = (id, nuevoEstado) => {
     const actualizados = pedidos.map(p => p.id === id ? { ...p, estado: nuevoEstado } : p);
     setPedidos(actualizados);
     notificar(`Pedido ${nuevoEstado === 'aprobado' ? 'aprobado exitosamente' : 'rechazado'}`, "exito");
   };
 
-  // --- ACCIONES CREADOR DE PAQUETES ---
   const handleGuardarPaquete = (e) => {
     e.preventDefault();
     if (subiendoFoto) return notificar("Espera a que suba la foto", "error");
@@ -268,9 +261,6 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // ==========================================
-  // VISTAS DE AUTENTICACIÓN
-  // ==========================================
   if (!usuarioActual) {
     return (
       <div className="contenedor-login">
@@ -285,7 +275,7 @@ export default function App() {
 
           {tabAuth !== "registro" ? (
             <div>
-              <div className="encabezado-login"><h2>{tabAuth === "superadmin" ? "Panel Maestro" : "Iniciar Sesión"}</h2><p>{tabAuth === "superadmin" ? "Control total del sistema" : "Ingresa tus credenciales"}</p></div>
+              <div className="encabezado-login"><h2>{tabAuth === "superadmin" ? "Panel Maestro" : "Iniciar Sesión"}</h2></div>
               <form onSubmit={iniciarSesion} className="formulario">
                 <div className="campo"><label>Usuario / Correo</label><input type="text" required value={authEmailUser} onChange={(e) => setAuthEmailUser(e.target.value)} /></div>
                 <div className="campo"><label>Contraseña</label><input type="password" required value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} /></div>
@@ -305,11 +295,11 @@ export default function App() {
                   <div className="selector-rol">
                     <label className={`opcion-rol ${regRol === "creador" ? "seleccionado" : ""}`}>
                       <input type="radio" name="rol" value="creador" checked={regRol === "creador"} onChange={() => setRegRol("creador")} />
-                      <div><strong>Admin. de Productos</strong><span>Sube paquetes (Requiere aprobación)</span></div>
+                      <div><strong>Admin. de Productos</strong><span>Sube paquetes</span></div>
                     </label>
                     <label className={`opcion-rol ${regRol === "cliente" ? "seleccionado" : ""}`}>
                       <input type="radio" name="rol" value="cliente" checked={regRol === "cliente"} onChange={() => setRegRol("cliente")} />
-                      <div><strong>Cliente</strong><span>Compra paquetes directamente</span></div>
+                      <div><strong>Cliente</strong><span>Compra paquetes</span></div>
                     </label>
                   </div>
                 </div>
@@ -324,18 +314,11 @@ export default function App() {
     );
   }
 
-  // ==========================================
-  // DASHBOARDS PRINCIPALES
-  // ==========================================
   return (
     <div className="contenedor-app">
       <header className="encabezado-admin">
         <div>
-          <h1>
-            {usuarioActual.rol === "superadmin" && "Panel de Control Maestro"}
-            {usuarioActual.rol === "creador" && "Panel del Gestor de Paquetes"}
-            {usuarioActual.rol === "cliente" && "Portal del Cliente"}
-          </h1>
+          <h1>Panel Principal</h1>
           <p>Usuario: <strong>{usuarioActual.nombre}</strong> &bull; <span className={`badge-rol badge-${usuarioActual.rol}`}>{usuarioActual.rol.toUpperCase()}</span></p>
         </div>
         <button onClick={cerrarSesion} className="btn-logout">Cerrar Sesión</button>
@@ -343,30 +326,27 @@ export default function App() {
 
       {mensaje && <div className={`alerta alerta-${mensaje.tipo}`}>{mensaje.texto}</div>}
 
-      {/* 1. VISTA SUPER ADMIN */}
+      {/* VISTA SUPER ADMIN */}
       {usuarioActual.rol === "superadmin" && (
         <div className="contenedor-superadmin">
-          
-          {/* NUEVA SECCIÓN: Aprobación de Pedidos */}
           <section className="tarjeta seccion-espaciada" style={{ borderTop: "4px solid #10b981" }}>
             <div className="tabla-header">
-              <h2>Aprobación de Compras (Pedidos de Clientes)</h2>
+              <h2>Aprobación de Compras (Pedidos)</h2>
               <span className="badge-contador">{pedidos.filter((p) => p.estado === "pendiente").length} pendientes</span>
             </div>
             <div className="contenedor-tabla">
               <table className="tabla">
                 <thead><tr><th>Fecha</th><th>Cliente</th><th>Paquete Solicitado</th><th>Monto</th><th>Estado</th><th style={{ textAlign: "right" }}>Decisión</th></tr></thead>
                 <tbody>
-                  {pedidos.length === 0 ? <tr><td colSpan="6" className="mensaje-vacio">No hay pedidos registrados.</td></tr> : null}
                   {pedidos.map((pedido) => (
                     <tr key={pedido.id}>
                       <td style={{fontSize:"12px"}}>{pedido.fecha}</td>
-                      <td><strong>{pedido.clienteNombre}</strong><br/><span style={{fontSize:"11px", color:"#6b7280"}}>{pedido.clienteEmail}</span></td>
+                      <td><strong>{pedido.clienteNombre}</strong></td>
                       <td>{pedido.paqueteTitulo}</td>
                       <td style={{fontWeight:"bold", color:"#059669"}}>${pedido.precio}</td>
                       <td><span className={`badge-estado badge-estado-${pedido.estado}`}>{pedido.estado}</span></td>
                       <td style={{ textAlign: "right", minWidth: "180px" }}>
-                        {pedido.estado !== "aprobado" && <button onClick={() => cambiarEstadoPedido(pedido.id, "aprobado")} className="btn-accion btn-aprobar">Aprobar Venta</button>}
+                        {pedido.estado !== "aprobado" && <button onClick={() => cambiarEstadoPedido(pedido.id, "aprobado")} className="btn-accion btn-aprobar">Aprobar</button>}
                         {pedido.estado !== "rechazado" && <button onClick={() => cambiarEstadoPedido(pedido.id, "rechazado")} className="btn-accion btn-peligro-suave">Rechazar</button>}
                       </td>
                     </tr>
@@ -376,44 +356,23 @@ export default function App() {
             </div>
           </section>
 
-          {/* Formulario Edición Paquetes */}
-          {adminEditandoPaqId && (
-            <section className="tarjeta seccion-espaciada" style={{ border: "2px solid #3b82f6" }}>
-              <h2>Edición Rápida de Paquete (Super Admin)</h2>
-              <form onSubmit={guardarEdicionPaqueteAdmin} className="formulario" style={{ marginTop: "16px" }}>
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <div className="campo" style={{ flex: 2 }}><label>Título</label><input type="text" required value={adminPaqTitulo} onChange={(e) => setAdminPaqTitulo(e.target.value)} /></div>
-                  <div className="campo" style={{ flex: 1 }}><label>Precio</label><input type="number" required value={adminPaqPrecio} onChange={(e) => setAdminPaqPrecio(e.target.value)} /></div>
-                </div>
-                <div className="campo"><label>Descripción</label><input type="text" required value={adminPaqDesc} onChange={(e) => setAdminPaqDesc(e.target.value)} /></div>
-                <div className="campo"><label>Nueva Foto (URL)</label><input type="url" value={adminPaqImagen.startsWith("data:") ? "" : adminPaqImagen} onChange={(e) => setAdminPaqImagen(e.target.value)} /></div>
-                <div className="acciones-form">
-                  <button type="submit" className="btn btn-primario">Guardar Cambios</button>
-                  <button type="button" className="btn btn-secundario" onClick={() => setAdminEditandoPaqId(null)}>Cancelar</button>
-                </div>
-              </form>
-            </section>
-          )}
-
           {/* Gestión de Paquetes */}
           <section className="tarjeta seccion-espaciada">
             <div className="tabla-header">
               <h2>Aprobación de Paquetes (Creadores)</h2>
-              <span className="badge-contador">{paquetes.filter((p) => p.estado === "pendiente").length} pendientes</span>
             </div>
             <div className="contenedor-tabla">
               <table className="tabla">
                 <thead><tr><th>Foto</th><th>Paquete / Creador</th><th>Estado</th><th style={{ textAlign: "right" }}>Acciones Admin</th></tr></thead>
                 <tbody>
                   {paquetes.map((p) => (
-                    <tr key={p.id} style={p.id === adminEditandoPaqId ? {background: "#eff6ff"} : {}}>
+                    <tr key={p.id}>
                       <td><img src={p.imagen} alt={p.titulo} className="miniatura-tabla" /></td>
                       <td><strong>{p.titulo}</strong> <span style={{color:"#2563eb", fontWeight:"bold"}}>${p.precio}</span><p style={{ fontSize: "11px", color: "#6b7280" }}>Por: {p.creador}</p></td>
                       <td><span className={`badge-estado badge-estado-${p.estado}`}>{p.estado}</span></td>
                       <td style={{ textAlign: "right", minWidth: "220px" }}>
                         {p.estado !== "aprobado" && <button onClick={() => cambiarEstadoPaquete(p.id, "aprobado")} className="btn-accion btn-aprobar">Aprobar</button>}
                         {p.estado !== "rechazado" && <button onClick={() => cambiarEstadoPaquete(p.id, "rechazado")} className="btn-accion btn-peligro-suave">Rechazar</button>}
-                        <button onClick={() => cargarPaqueteParaEdicionAdmin(p)} className="btn-accion btn-editar" style={{marginLeft: "10px"}}>Editar</button>
                         <button onClick={() => eliminarPaqueteAdmin(p.id)} className="btn-accion btn-eliminar">Eliminar</button>
                       </td>
                     </tr>
@@ -422,54 +381,10 @@ export default function App() {
               </table>
             </div>
           </section>
-
-          {/* Usuarios */}
-          <div className="grid-principal">
-            <section className="tarjeta">
-              <h2>{editandoId ? "Editar Usuario" : "Crear Usuario Directo"}</h2>
-              <form onSubmit={guardarUsuarioSuperAdmin} className="formulario" style={{ marginTop: "16px" }}>
-                <div className="campo"><label>Nombre</label><input type="text" required value={adminNombre} onChange={(e) => setAdminNombre(e.target.value)} /></div>
-                <div className="campo"><label>Email</label><input type="email" required value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} /></div>
-                <div className="campo"><label>Rol</label><select className="input-select" value={adminRol} onChange={(e) => setAdminRol(e.target.value)}><option value="cliente">Cliente</option><option value="creador">Creador</option></select></div>
-                <div className="campo"><label>Contraseña {editandoId && "(Vacío para conservar)"}</label><input type="password" required={!editandoId} value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} /></div>
-                <div className="acciones-form">
-                  <button type="submit" className="btn btn-primario">{editandoId ? "Actualizar" : "Registrar Aprobado"}</button>
-                  {editandoId && <button type="button" className="btn btn-secundario" onClick={() => setEditandoId(null)}>Cancelar</button>}
-                </div>
-              </form>
-            </section>
-
-            <section className="tarjeta">
-              <div className="tabla-header"><h2>Cuentas Registradas</h2></div>
-              <div className="contenedor-tabla">
-                <table className="tabla">
-                  <thead><tr><th>Usuario</th><th>Rol</th><th>Estado</th><th style={{ textAlign: "right" }}>Acciones</th></tr></thead>
-                  <tbody>
-                    {usuarios.map((u) => {
-                      const id = u.id || u._id;
-                      const esPendiente = u.estadoCuenta === "pendiente";
-                      return (
-                        <tr key={id} style={esPendiente ? {background: "#fffbeb"} : {}}>
-                          <td><strong>{u.nombre}</strong><br/><span style={{fontSize:"11px", color:"#6b7280"}}>{u.email}</span></td>
-                          <td><span className={`badge-rol badge-${u.rol || "cliente"}`}>{u.rol || "cliente"}</span></td>
-                          <td><span className={`badge-estado badge-estado-${u.estadoCuenta || "aprobado"}`}>{u.estadoCuenta || "aprobado"}</span></td>
-                          <td style={{ textAlign: "right" }}>
-                            {esPendiente && <button className="btn-accion btn-aprobar" onClick={() => aprobarCuentaAdmin(id)}>✔ Aprobar</button>}
-                            <button className="btn-accion btn-editar" onClick={() => { setEditandoId(id); setAdminNombre(u.nombre); setAdminEmail(u.email); setAdminRol(u.rol || "cliente"); }}>✏️</button>
-                            <button className="btn-accion btn-eliminar" onClick={() => eliminarUsuario(id)}>🗑️</button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          </div>
         </div>
       )}
 
-      {/* 2. VISTA CREADOR */}
+      {/* VISTA CREADOR */}
       {usuarioActual.rol === "creador" && (
         <div className="grid-principal">
           <section className="tarjeta">
@@ -478,10 +393,8 @@ export default function App() {
               <div className="campo"><label>Título</label><input type="text" required value={nuevoPaqTitulo} onChange={(e) => setNuevoPaqTitulo(e.target.value)} /></div>
               <div className="campo"><label>Precio (USD)</label><input type="number" required value={nuevoPaqPrecio} onChange={(e) => setNuevoPaqPrecio(e.target.value)} /></div>
               <div className="campo">
-                <label>Foto</label>
-                <input type="file" accept="image/*" onChange={(e) => procesarImagenLocal(e, setNuevoPaqImagen)} className="input-file" />
-                <input type="url" placeholder="O escribe URL de la foto" value={nuevoPaqImagen.startsWith("data:") ? "" : nuevoPaqImagen} onChange={(e) => setNuevoPaqImagen(e.target.value)} disabled={subiendoFoto} />
-                {nuevoPaqImagen && (<div className="preview-foto-box"><img src={nuevoPaqImagen} alt="Preview" className="preview-foto" /><button type="button" onClick={() => setNuevoPaqImagen("")} className="btn-quitar-foto">Eliminar</button></div>)}
+                <label>Foto URL</label>
+                <input type="url" value={nuevoPaqImagen} onChange={(e) => setNuevoPaqImagen(e.target.value)} disabled={subiendoFoto} />
               </div>
               <div className="campo"><label>Descripción</label><input type="text" required value={nuevoPaqDesc} onChange={(e) => setNuevoPaqDesc(e.target.value)} /></div>
               <div className="acciones-form">
@@ -512,20 +425,15 @@ export default function App() {
         </div>
       )}
 
-      {/* 3. VISTA CLIENTE (CATÁLOGO Y PEDIDOS) */}
+      {/* VISTA CLIENTE */}
       {usuarioActual.rol === "cliente" && (
         <>
-          {/* Historial de Compras del Cliente */}
           <section className="tarjeta seccion-espaciada" style={{background: "#f8fafc"}}>
-            <div className="tabla-header">
-              <h2>Mis Solicitudes de Paquetes</h2>
-            </div>
+            <div className="tabla-header"><h2>Mis Solicitudes</h2></div>
             <div className="contenedor-tabla">
               <table className="tabla">
-                <thead><tr><th>Fecha</th><th>Paquete</th><th>Precio</th><th>Estado de Compra</th></tr></thead>
+                <thead><tr><th>Fecha</th><th>Paquete</th><th>Precio</th><th>Estado</th></tr></thead>
                 <tbody>
-                  {pedidos.filter(p => p.clienteEmail === usuarioActual.email).length === 0 ? 
-                    <tr><td colSpan="4" className="mensaje-vacio">Aún no has solicitado ningún paquete.</td></tr> : null}
                   {pedidos.filter(p => p.clienteEmail === usuarioActual.email).map(pedido => (
                     <tr key={pedido.id}>
                       <td style={{fontSize:"12px", color: "#6b7280"}}>{pedido.fecha}</td>
@@ -539,32 +447,22 @@ export default function App() {
             </div>
           </section>
 
-          {/* Catálogo de Productos */}
           <section className="tarjeta">
             <h2>Catálogo de Paquetes Disponibles</h2>
-            <p className="subtitulo">Explora y solicita tus próximos destinos.</p>
             <div className="catalogo-grid">
-              {paquetes.filter((p) => p.estado === "aprobado").length === 0 ? (
-                <p className="mensaje-vacio">No hay paquetes aprobados en este momento.</p>
-              ) : (
-                paquetes.filter((p) => p.estado === "aprobado").map((p) => (
-                  <div key={p.id} className="tarjeta-paquete">
-                    <div className="contenedor-img-paquete">
-                      <img src={p.imagen} alt={p.titulo} className="img-paquete" />
-                      <span className="tag-disponible">Disponible</span>
-                    </div>
-                    <div className="cuerpo-paquete">
-                      <h3>{p.titulo}</h3>
-                      <p className="desc-paquete">{p.descripcion}</p>
-                      <div className="pie-paquete">
-                        <span className="precio-paquete">${p.precio} USD</span>
-                        {/* BOTÓN SOLICITAR PARA EL CLIENTE */}
-                        <button className="btn btn-primario" onClick={() => solicitarPedido(p)}>Solicitar</button>
-                      </div>
+              {paquetes.filter((p) => p.estado === "aprobado").map((p) => (
+                <div key={p.id} className="tarjeta-paquete">
+                  <div className="contenedor-img-paquete"><img src={p.imagen} alt={p.titulo} className="img-paquete" /></div>
+                  <div className="cuerpo-paquete">
+                    <h3>{p.titulo}</h3>
+                    <p className="desc-paquete">{p.descripcion}</p>
+                    <div className="pie-paquete">
+                      <span className="precio-paquete">${p.precio} USD</span>
+                      <button className="btn btn-primario" onClick={() => solicitarPedido(p)}>Solicitar</button>
                     </div>
                   </div>
-                ))
-              )}
+                </div>
+              ))}
             </div>
           </section>
         </>
@@ -575,9 +473,6 @@ export default function App() {
   );
 }
 
-// ==========================================
-// ESTILOS CSS
-// ==========================================
 const estilosCSS = `
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
   body { background-color: #f3f4f6; color: #1f2937; }
@@ -590,18 +485,13 @@ const estilosCSS = `
   .btn-tab-super.activa { background-color: #fee2e2; color: #b91c1c; }
   .encabezado-login { text-align: center; margin-bottom: 20px; }
   .encabezado-login h2 { font-size: 22px; color: #111827; }
-  .encabezado-login p { font-size: 13px; color: #6b7280; margin-top: 4px; }
   .selector-rol { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
   .opcion-rol { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; font-size: 13px; }
   .opcion-rol.seleccionado { border-color: #2563eb; background: #f0f7ff; }
-  .opcion-rol input { margin-top: 3px; }
-  .opcion-rol div { display: flex; flex-direction: column; }
-  .opcion-rol span { color: #6b7280; font-size: 11px; }
   .campo-recaptcha { display: flex; justify-content: center; margin-top: 10px; margin-bottom: 6px; }
   .contenedor-app { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
   .encabezado-admin { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
   .btn-logout { background: #fff; border: 1px solid #d1d5db; color: #374151; padding: 8px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-  .btn-logout:hover { background: #fee2e2; color: #991b1b; }
   .alerta { padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
   .alerta-exito { background: #def7ec; color: #03543f; }
   .alerta-error { background: #fde8e8; color: #9b1c1c; }
@@ -612,16 +502,11 @@ const estilosCSS = `
   .campo { display: flex; flex-direction: column; gap: 4px; }
   .campo label { font-size: 13px; font-weight: 600; color: #374151; }
   .campo input, .input-select { padding: 10px 12px; border-radius: 6px; border: 1px solid #d1d5db; font-size: 14px; outline: none; }
-  .input-file { padding: 6px 0 !important; border: none !important; }
-  .preview-foto-box { margin-top: 6px; display: flex; align-items: center; gap: 10px; }
-  .preview-foto { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #d1d5db; }
-  .btn-quitar-foto { background: none; border: none; color: #dc2626; font-size: 12px; cursor: pointer; text-decoration: underline; }
   .miniatura-tabla { width: 60px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #e5e7eb; background: #f9fafb; }
   .acciones-form { display: flex; gap: 10px; margin-top: 6px; }
   .btn { padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; flex: 1; }
   .btn-primario { background: #2563eb; color: white; }
   .btn-peligro { background: #dc2626; color: white; }
-  .btn-secundario { background: #e5e7eb; color: #374151; }
   .badge-rol { padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
   .badge-superadmin { background: #fee2e2; color: #991b1b; }
   .badge-creador { background: #fef3c7; color: #92400e; }
@@ -645,8 +530,6 @@ const estilosCSS = `
   .img-paquete { width: 100%; height: 100%; object-fit: cover; }
   .cuerpo-paquete { padding: 16px; display: flex; flex-direction: column; flex: 1; justify-content: space-between; }
   .desc-paquete { font-size: 13px; color: #6b7280; margin: 8px 0; }
-  .tag-disponible { position: absolute; top: 10px; right: 10px; background: rgba(3, 84, 63, 0.9); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; }
   .precio-paquete { font-size: 18px; font-weight: 700; color: #111827; }
   .pie-paquete { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
-  .mensaje-vacio { text-align: center; color: #9ca3af; padding: 36px 0; font-size: 14px; width: 100%; grid-column: 1 / -1; }
 `;
