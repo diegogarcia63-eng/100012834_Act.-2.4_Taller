@@ -2,7 +2,7 @@
 const mysql = require('mysql2/promise');
 
 // Subimos dos niveles (../../) para encontrar el archivo .env en la raíz del proyecto
-require('dotenv').config({ path: __dirname + '/../../.env' }); 
+require('dotenv').config({ path: __dirname + '/../.env' });
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
